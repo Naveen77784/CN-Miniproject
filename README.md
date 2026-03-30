@@ -94,6 +94,6 @@ This project demonstrates secure, concurrent client-server communication using s
 
 ## 👨‍💻 Authors
 
-Pulla Jagadeeshwar Reddy
-Pranav S S
-Naveen Patangi
+Pulla Jagadeeshwar Reddy\n
+Pranav S S\n
+Naveen Patangi\n
