@@ -3,38 +3,57 @@ import ssl
 import threading
 import time
 
-HOST = "10.30.201.69"
+HOST = "192.168.68.109"
 PORT = 5000
 
-def client_task():
+NUM_CLIENTS = 10   # change to 20, 50, etc for heavy load
 
-    context = ssl.create_default_context()
-    context.check_hostname = False
-    context.verify_mode = ssl.CERT_NONE
 
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s = context.wrap_socket(s, server_hostname=HOST)
+def client_task(client_id):
+    try:
+        context = ssl.create_default_context()
+        context.check_hostname = False
+        context.verify_mode = ssl.CERT_NONE
 
-    s.connect((HOST, PORT))
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        secure_client = context.wrap_socket(sock, server_hostname=HOST)
 
-    start = time.time()
+        start_time = time.time()
 
-    s.send("BOOK 10".encode())
-    response = s.recv(1024)
+        secure_client.connect((HOST, PORT))
 
-    end = time.time()
+        # each client tries booking different seat
+        seat_number = client_id + 1
+        message = f"BOOK {seat_number}"
 
-    print("Response:", response.decode(), "Time:", end-start)
+        secure_client.send(message.encode())
 
-    s.close()
+        response = secure_client.recv(1024).decode()
+
+        end_time = time.time()
+
+        print(f"[Client {client_id}] {response} | Time: {end_time - start_time:.4f}s")
+
+        secure_client.close()
+
+    except Exception as e:
+        print(f"[Client {client_id}] Error:", e)
 
 
 threads = []
 
-for i in range(10):
-    t = threading.Thread(target=client_task)
+start = time.time()
+
+for i in range(NUM_CLIENTS):
+    t = threading.Thread(target=client_task, args=(i,))
     threads.append(t)
     t.start()
 
 for t in threads:
     t.join()
+
+end = time.time()
+
+print("\n=== Stress Test Complete ===")
+print(f"Total Clients: {NUM_CLIENTS}")
+print(f"Total Time: {end - start:.2f}s")
